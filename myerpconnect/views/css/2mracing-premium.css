@@ -1,0 +1,911 @@
+/* =============================================================
+   2M RACING — Premium Dark Motorsport Theme
+   Brand Colors: #C0272D (Racing Red) · #1C1C1C (Charcoal) · #C9A84C (Gold)
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Brand */
+  --r-red:          #C0272D;
+  --r-red-dark:     #8B0000;
+  --r-red-glow:     rgba(192, 39, 45, 0.35);
+  --r-gold:         #C9A84C;
+  --r-gold-light:   #E8C97A;
+  --r-silver:       #A8A8A8;
+  --r-charcoal:     #1C1C1C;
+
+  /* Backgrounds */
+  --r-bg:           #0D0D0D;
+  --r-bg-mid:       #111111;
+  --r-card:         #161616;
+  --r-card-border:  #252525;
+  --r-card-hover:   #1E1E1E;
+
+  /* Text */
+  --r-text:         #F0F0F0;
+  --r-text-sub:     #888888;
+  --r-text-muted:   #555555;
+
+  /* UI */
+  --r-radius:       4px;
+  --r-radius-lg:    8px;
+  --r-transition:   .22s cubic-bezier(.4,0,.2,1);
+
+  font-family: 'Sarabun', 'Rajdhani', sans-serif;
+}
+
+/* ---- Global Reset for Store ---- */
+body {
+  background: var(--r-bg);
+  color: var(--r-text);
+}
+
+/* ================================================================
+   NAVBAR OVERRIDE — 2M Racing top bar
+   ================================================================ */
+#header {
+  background: #0D0D0D !important;
+  border-bottom: 2px solid var(--r-red) !important;
+  box-shadow: 0 2px 20px rgba(192,39,45,.25) !important;
+}
+
+.header-nav {
+  background: var(--r-charcoal) !important;
+  border-bottom: 1px solid #222 !important;
+}
+
+/* Logo area */
+.logo img { filter: drop-shadow(0 0 8px rgba(192,39,45,.5)); }
+
+/* Nav links */
+.top-menu > li > a {
+  color: var(--r-text) !important;
+  font-weight: 600;
+  letter-spacing: .5px;
+  font-size: 14px;
+  transition: color var(--r-transition);
+}
+.top-menu > li > a:hover { color: var(--r-red) !important; }
+
+/* Cart + Search icons */
+.header-options a, .blockcart a { color: var(--r-text) !important; }
+.blockcart .cart-products-count {
+  background: var(--r-red) !important;
+  color: #fff !important;
+}
+
+/* Search bar */
+input.ui-autocomplete-input,
+.search-widget input {
+  background: #1A1A1A !important;
+  border: 1px solid #333 !important;
+  color: var(--r-text) !important;
+  border-radius: var(--r-radius) !important;
+}
+
+/* ================================================================
+   HERO BANNER — racing diagonal stripe style
+   ================================================================ */
+.mec-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0D0D0D 0%, #1C0000 50%, #0D0D0D 100%);
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  padding: 40px 32px;
+}
+
+/* Racing stripe overlay */
+.mec-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -55deg,
+    transparent,
+    transparent 40px,
+    rgba(192,39,45,.04) 40px,
+    rgba(192,39,45,.04) 80px
+  );
+  pointer-events: none;
+}
+
+/* Red diagonal accent bar */
+.mec-hero::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--r-red), var(--r-red-dark));
+  box-shadow: -6px 0 40px var(--r-red-glow);
+}
+
+.mec-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+}
+
+/* Logo in hero */
+.mec-hero__logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.mec-hero__logo-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(192,39,45,.6));
+}
+
+.mec-hero__brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.mec-hero__brand-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 3px;
+  color: var(--r-text);
+  text-transform: uppercase;
+}
+
+.mec-hero__brand-name span {
+  color: var(--r-red);
+}
+
+.mec-hero__brand-sub {
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--r-gold);
+  text-transform: uppercase;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Hero tagline */
+.mec-hero__tagline {
+  flex: 1;
+  border-left: 2px solid #2A2A2A;
+  padding-left: 40px;
+}
+
+.mec-hero__tagline h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--r-text);
+  line-height: 1.2;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mec-hero__tagline h2 em {
+  color: var(--r-red);
+  font-style: normal;
+}
+
+.mec-hero__tagline p {
+  color: var(--r-text-sub);
+  font-size: 14px;
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+
+.mec-hero__stats {
+  display: flex;
+  gap: 32px;
+}
+
+.mec-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.mec-stat__num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--r-gold);
+  line-height: 1;
+}
+
+.mec-stat__label {
+  font-size: 11px;
+  color: var(--r-text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ================================================================
+   FILTER + SORT BAR
+   ================================================================ */
+.mec-control-bar {
+  background: var(--r-bg-mid);
+  border-top: 1px solid #1A1A1A;
+  border-bottom: 1px solid #1A1A1A;
+  padding: 0;
+}
+
+.mec-filter-strip {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 16px;
+  gap: 2px;
+}
+
+.mec-filter-strip::-webkit-scrollbar { display: none; }
+
+.mec-filter-strip__item {
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--r-text-sub);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border-bottom: 3px solid transparent;
+  transition: color var(--r-transition), border-color var(--r-transition);
+}
+
+.mec-filter-strip__item:hover {
+  color: var(--r-text);
+  border-bottom-color: #333;
+}
+
+.mec-filter-strip__item--active {
+  color: var(--r-red);
+  border-bottom-color: var(--r-red);
+}
+
+.mec-sort-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #1A1A1A;
+  flex-wrap: wrap;
+}
+
+.mec-sort-strip__label {
+  font-size: 12px;
+  color: var(--r-text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.mec-sort-btn {
+  padding: 6px 16px;
+  border-radius: var(--r-radius);
+  border: 1px solid #2A2A2A;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--r-text-sub);
+  cursor: pointer;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  transition: all var(--r-transition);
+}
+
+.mec-sort-btn:hover {
+  border-color: var(--r-red);
+  color: var(--r-text);
+}
+
+.mec-sort-btn--active {
+  background: var(--r-red);
+  border-color: var(--r-red);
+  color: #fff;
+}
+
+/* ================================================================
+   PRODUCT GRID
+   ================================================================ */
+.mec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 10px;
+  padding: 16px;
+  background: var(--r-bg);
+}
+
+@media (min-width: 768px) {
+  .mec-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+}
+
+@media (min-width: 1200px) {
+  .mec-grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
+}
+
+@media (min-width: 1600px) {
+  .mec-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ================================================================
+   PRODUCT CARD
+   ================================================================ */
+.mec-card {
+  background: var(--r-card);
+  border: 1px solid var(--r-card-border);
+  border-radius: var(--r-radius-lg);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition:
+    transform var(--r-transition),
+    box-shadow var(--r-transition),
+    border-color var(--r-transition);
+}
+
+.mec-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--r-red);
+  box-shadow:
+    0 0 0 1px var(--r-red),
+    0 12px 40px rgba(0,0,0,.6),
+    0 0 20px var(--r-red-glow);
+}
+
+/* Top red accent line */
+.mec-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--r-red), var(--r-gold));
+  opacity: 0;
+  transition: opacity var(--r-transition);
+  z-index: 3;
+}
+
+.mec-card:hover::before { opacity: 1; }
+
+/* ---- IMAGE ---- */
+.mec-card__img-wrap {
+  position: relative;
+  display: block;
+  padding-top: 100%;
+  overflow: hidden;
+  background: #0A0A0A;
+}
+
+/* Diagonal stripe on image bg */
+.mec-card__img-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -55deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,.015) 20px,
+    rgba(255,255,255,.015) 40px
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mec-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  transition: transform .4s ease;
+  z-index: 2;
+}
+
+.mec-card:hover .mec-card__img { transform: scale(1.08); }
+
+/* ---- BADGES ---- */
+.mec-badge {
+  position: absolute;
+  z-index: 4;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.mec-badge--discount {
+  top: 10px;
+  left: 0;
+  background: var(--r-red);
+  color: #fff;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 2px 0 8px rgba(192,39,45,.5);
+}
+
+.mec-badge--new {
+  top: 10px;
+  left: 0;
+  background: var(--r-gold);
+  color: #000;
+  border-radius: 0 3px 3px 0;
+  font-weight: 800;
+}
+
+.mec-badge--soldout {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,.75);
+  color: var(--r-text-sub);
+  border: 1px solid #333;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.mec-badge--hot {
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: 1px solid var(--r-red);
+  color: var(--r-red);
+  border-radius: var(--r-radius);
+}
+
+/* ---- QUICK ADD ---- */
+.mec-card__quick-add {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 5;
+  background: var(--r-red);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity var(--r-transition), transform var(--r-transition);
+}
+
+.mec-card:hover .mec-card__quick-add {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mec-card__quick-add:hover { background: var(--r-red-dark); }
+
+/* ---- INFO PANEL ---- */
+.mec-card__info {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  background: var(--r-card);
+}
+
+/* Brand label inside card */
+.mec-card__brand {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--r-gold);
+}
+
+/* Product name */
+.mec-card__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--r-text);
+  line-height: 1.45;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--r-transition);
+}
+
+.mec-card__name:hover { color: var(--r-red); }
+
+/* ---- PRICE ---- */
+.mec-card__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.mec-card__price-sale {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--r-red);
+  line-height: 1;
+  letter-spacing: .5px;
+}
+
+.mec-card__price-original {
+  font-size: 12px;
+  color: var(--r-text-muted);
+  text-decoration: line-through;
+}
+
+.mec-card__price-ws {
+  font-size: 11px;
+  color: var(--r-gold);
+  font-weight: 600;
+}
+
+/* ---- TAGS ---- */
+.mec-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 2px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.mec-tag--free  { background: #0d2b1e; color: #4CAF82; border: 1px solid #1a4d35; }
+.mec-tag--ws    { background: #1c1500; color: var(--r-gold); border: 1px solid #3a2e00; }
+.mec-tag--new   { background: #1a0d00; color: var(--r-gold-light); border: 1px solid #3d2200; }
+
+/* ---- RATING ---- */
+.mec-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mec-stars { display: inline-flex; align-items: center; gap: 1px; }
+
+.mec-star { font-style: normal; font-size: 11px; color: #333; }
+.mec-star--filled { color: var(--r-gold); }
+
+.mec-stars__count { font-size: 11px; color: var(--r-text-muted); margin-left: 3px; }
+
+.mec-card__sold {
+  font-size: 11px;
+  color: var(--r-text-muted);
+}
+
+/* ---- FOOTER ---- */
+.mec-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  margin-top: auto;
+  border-top: 1px solid #1E1E1E;
+}
+
+.mec-card__sku {
+  font-size: 10px;
+  color: var(--r-text-muted);
+  font-family: 'Rajdhani', monospace;
+  letter-spacing: .5px;
+}
+
+.mec-card__wishlist {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #2A2A2A;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--r-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all var(--r-transition);
+}
+
+.mec-card__wishlist:hover {
+  border-color: var(--r-red);
+  color: var(--r-red);
+  background: rgba(192,39,45,.1);
+}
+
+/* ================================================================
+   MATERIAL TYPE INDICATOR (titanium / gold / silver / rainbow)
+   ================================================================ */
+.mec-material {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.mec-material__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: transform var(--r-transition);
+}
+
+.mec-material__dot:hover { transform: scale(1.3); }
+
+.mec-material__dot--silver   { background: #C0C0C0; }
+.mec-material__dot--gold     { background: linear-gradient(135deg, #C9A84C, #E8C97A); }
+.mec-material__dot--blue     { background: #4169E1; }
+.mec-material__dot--rainbow  {
+  background: linear-gradient(135deg, #C0C0C0, #9370DB, #4169E1, #1E90FF);
+}
+
+/* ================================================================
+   SECTION HEADER (ขายดี / ใหม่ / แนะนำ)
+   ================================================================ */
+.mec-section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px 4px;
+}
+
+.mec-section-header__line {
+  width: 4px;
+  height: 28px;
+  background: linear-gradient(180deg, var(--r-red), var(--r-red-dark));
+  border-radius: 2px;
+  box-shadow: 0 0 10px var(--r-red-glow);
+  flex-shrink: 0;
+}
+
+.mec-section-header__title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--r-text);
+  margin: 0;
+}
+
+.mec-section-header__title span { color: var(--r-red); }
+
+.mec-section-header__count {
+  font-size: 12px;
+  color: var(--r-text-muted);
+  margin-left: auto;
+}
+
+/* ================================================================
+   FLASH SALE BANNER
+   ================================================================ */
+.mec-flash {
+  margin: 12px 16px;
+  background: linear-gradient(135deg, #1a0000 0%, #2d0505 50%, #1a0000 100%);
+  border: 1px solid var(--r-red);
+  border-radius: var(--r-radius-lg);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px var(--r-red-glow);
+}
+
+.mec-flash::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -55deg, transparent, transparent 20px,
+    rgba(192,39,45,.05) 20px, rgba(192,39,45,.05) 40px
+  );
+}
+
+.mec-flash__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.mec-flash__icon {
+  font-size: 24px;
+  animation: flash-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes flash-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .7; transform: scale(1.15); }
+}
+
+.mec-flash__title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.mec-flash__sub {
+  font-size: 12px;
+  color: var(--r-text-sub);
+  letter-spacing: 1px;
+}
+
+.mec-flash__timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.mec-flash__timer-block {
+  background: #0D0D0D;
+  border: 1px solid var(--r-red);
+  color: var(--r-red);
+  font-family: 'Rajdhani', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-radius);
+  box-shadow: 0 0 8px var(--r-red-glow);
+}
+
+.mec-flash__timer-sep {
+  color: var(--r-red);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ================================================================
+   PAGINATION
+   ================================================================ */
+.mec-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 16px;
+  background: var(--r-bg);
+}
+
+.mec-page-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--r-card);
+  border: 1px solid var(--r-card-border);
+  border-radius: var(--r-radius);
+  color: var(--r-text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--r-transition);
+}
+
+.mec-page-btn:hover { border-color: var(--r-red); color: var(--r-text); }
+
+.mec-page-btn--active {
+  background: var(--r-red);
+  border-color: var(--r-red);
+  color: #fff;
+  box-shadow: 0 0 12px var(--r-red-glow);
+}
+
+/* ================================================================
+   BREADCRUMB + PAGE TITLE override
+   ================================================================ */
+.breadcrumb { background: transparent !important; }
+.breadcrumb-item a, .breadcrumb-item { color: var(--r-text-muted) !important; font-size: 13px; }
+.breadcrumb-item.active { color: var(--r-text-sub) !important; }
+.breadcrumb-item + .breadcrumb-item::before { color: #333 !important; }
+
+/* ================================================================
+   PRODUCT DETAIL PAGE overrides
+   ================================================================ */
+.page-product-box, .product-information { background: var(--r-card) !important; }
+
+.product-prices .current-price span,
+.current-price { color: var(--r-red) !important; font-family: 'Rajdhani', sans-serif !important; font-size: 28px !important; }
+
+.btn-primary, .add-to-cart {
+  background: var(--r-red) !important;
+  border: none !important;
+  border-radius: var(--r-radius) !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  transition: background var(--r-transition), box-shadow var(--r-transition) !important;
+}
+
+.btn-primary:hover, .add-to-cart:hover {
+  background: var(--r-red-dark) !important;
+  box-shadow: 0 0 20px var(--r-red-glow) !important;
+}
+
+/* ================================================================
+   FOOTER override
+   ================================================================ */
+#footer {
+  background: #0A0A0A !important;
+  border-top: 2px solid var(--r-red) !important;
+  color: var(--r-text-sub) !important;
+}
+
+#footer a { color: var(--r-text-sub) !important; transition: color var(--r-transition) !important; }
+#footer a:hover { color: var(--r-red) !important; }
+
+/* ================================================================
+   SPINNER (quick add loading)
+   ================================================================ */
+.mec-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--r-red); }
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 767px) {
+  .mec-hero { min-height: auto; padding: 24px 16px; }
+  .mec-hero__inner { flex-direction: column; gap: 20px; }
+  .mec-hero__tagline { border-left: none; padding-left: 0; border-top: 1px solid #2A2A2A; padding-top: 20px; }
+  .mec-hero__brand-name { font-size: 26px; }
+  .mec-hero__stats { gap: 20px; }
+  .mec-flash { flex-direction: column; gap: 12px; text-align: center; }
+  .mec-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
+}
