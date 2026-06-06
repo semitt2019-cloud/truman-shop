@@ -1,0 +1,34 @@
+name: Deploy to truman.co.th
+
+on:
+  push:
+    branches:
+      - main  # deploy ทุกครั้งที่ push ขึ้น main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: 45.144.164.135
+          username: trueman
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /home/trueman/domains/truman.co.th/public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/var/cache/**
+            **/var/logs/**
+            **/img/p/**
+            **/img/c/**
+            **/img/tmp/**
+            **/upload/**
+            **/config/settings.inc.php
+            **/app/config/parameters.php
+            deploy_log.txt
