@@ -7,7 +7,7 @@ if (!defined('_PS_VERSION_')) {
  * Shopee Open Platform API v2
  * Docs: https://open.shopee.com/documents
  */
-class ShopeeApiClient
+class ShopeeApiClient implements IMarketplaceConnector
 {
     const BASE_URL = 'https://partner.shopeemobile.com';
 
@@ -52,6 +52,17 @@ class ShopeeApiClient
         }
 
         return $this->post('/api/v2/product/update_stock', ['stock_list' => $stock_list]);
+    }
+
+    public function getChannelName(): string
+    {
+        return 'shopee';
+    }
+
+    public function isAvailable(): bool
+    {
+        return !empty($this->partner_id) && !empty($this->partner_key)
+            && !empty($this->shop_id)    && !empty($this->access_token);
     }
 
     // ค้นหา item_id ของ Shopee จาก seller SKU

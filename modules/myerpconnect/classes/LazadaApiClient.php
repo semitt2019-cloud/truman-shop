@@ -7,7 +7,7 @@ if (!defined('_PS_VERSION_')) {
  * Lazada Open Platform API
  * Docs: https://open.lazada.com/apps/doc/api
  */
-class LazadaApiClient
+class LazadaApiClient implements IMarketplaceConnector
 {
     const BASE_URL = 'https://api.lazada.co.th/rest';
 
@@ -50,6 +50,16 @@ class LazadaApiClient
         ], $items);
 
         return $this->post('/products/stock/update', ['skus' => json_encode($skus)]);
+    }
+
+    public function getChannelName(): string
+    {
+        return 'lazada';
+    }
+
+    public function isAvailable(): bool
+    {
+        return !empty($this->app_key) && !empty($this->app_secret) && !empty($this->access_token);
     }
 
     // ดึงรายการสินค้าทั้งหมดจาก Lazada (พร้อม sku_id)

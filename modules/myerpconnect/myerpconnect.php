@@ -3,10 +3,22 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+// Interfaces (load before concrete classes)
+require_once __DIR__ . '/classes/connectors/IErpConnector.php';
+require_once __DIR__ . '/classes/connectors/IMarketplaceConnector.php';
+require_once __DIR__ . '/classes/connectors/INotificationService.php';
+
+// Concrete connectors
+require_once __DIR__ . '/classes/connectors/ManualErpConnector.php';
+require_once __DIR__ . '/classes/connectors/NullMarketplace.php';
+require_once __DIR__ . '/classes/connectors/SmtpMailService.php';
 require_once __DIR__ . '/classes/ErpApiClient.php';
 require_once __DIR__ . '/classes/ShopeeApiClient.php';
 require_once __DIR__ . '/classes/LazadaApiClient.php';
 require_once __DIR__ . '/classes/MultiChannelSyncer.php';
+
+// Factory (load last — needs all classes above)
+require_once __DIR__ . '/classes/connectors/ConnectorFactory.php';
 
 class MyErpConnect extends Module
 {
@@ -83,6 +95,7 @@ class MyErpConnect extends Module
             Configuration::deleteByName($key);
         }
         $this->removeColumns();
+        $this->uninstallTables();
         return parent::uninstall();
     }
 
@@ -91,12 +104,16 @@ class MyErpConnect extends Module
     // ---------------------------------------------------------------
     private function installTables(): bool
     {
-        return Db::getInstance()->execute('
-            CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'myerpconnect_verification` (
-                `id_verification` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-                `id_customer`     INT(11) UNSIGNED NOT NULL,
-                `customer_type`   ENUM(\'retail\',\'mechanic\',\'dealer\') NOT NULL DEFAULT \'retail\',
-                `status`          ENUM(\'approved\',\'pending\',\'rejected\') NOT NULL DEFAULT \'pending\',
+        $db = Db::getInstance();
+        $p  = _DB_PREFIX_;
+
+        $tables = [
+            // ยืนยันตัวตนลูกค้า
+            "CREATE TABLE IF NOT EXISTS `{$p}myerpconnect_verification` (
+                `id_verification` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_customer`     INT UNSIGNED NOT NULL,
+                `customer_type`   ENUM('retail','mechanic','dealer') NOT NULL DEFAULT 'retail',
+                `status`          ENUM('approved','pending','rejected') NOT NULL DEFAULT 'pending',
                 `doc_shop_photo`  VARCHAR(255) DEFAULT NULL,
                 `doc_trade_reg`   VARCHAR(255) DEFAULT NULL,
                 `doc_id_card`     VARCHAR(255) DEFAULT NULL,
@@ -104,9 +121,136 @@ class MyErpConnect extends Module
                 `date_add`        DATETIME NOT NULL,
                 `date_upd`        DATETIME NOT NULL,
                 PRIMARY KEY (`id_verification`),
-                UNIQUE KEY `idx_customer` (`id_customer`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        ');
+                UNIQUE KEY `ux_customer` (`id_customer`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // mapping สินค้า PS ↔ Shopee / Lazada / TikTok / ERP
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_product_channel` (
+                `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_product`      INT UNSIGNED NOT NULL,
+                `channel`         ENUM('shopee','lazada','tiktok','erp') NOT NULL,
+                `channel_item_id` VARCHAR(128) NOT NULL DEFAULT '',
+                `channel_sku_id`  VARCHAR(128) DEFAULT NULL,
+                `active`          TINYINT(1) NOT NULL DEFAULT 1,
+                `date_sync`       DATETIME DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_product_channel` (`id_product`,`channel`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // ราคาต่อสินค้าต่อ customer group (override PS specific-price)
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_price_tier` (
+                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_product` INT UNSIGNED NOT NULL,
+                `id_group`   INT UNSIGNED NOT NULL,
+                `price`      DECIMAL(20,6) NOT NULL DEFAULT 0.000000,
+                `date_upd`   DATETIME NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_product_group` (`id_product`,`id_group`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // Flash Sale campaigns
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_flash_sale` (
+                `id_flash_sale` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `name`          VARCHAR(128) NOT NULL,
+                `date_start`    DATETIME NOT NULL,
+                `date_end`      DATETIME NOT NULL,
+                `active`        TINYINT(1) NOT NULL DEFAULT 1,
+                `date_add`      DATETIME NOT NULL,
+                PRIMARY KEY (`id_flash_sale`),
+                KEY `idx_active_end` (`active`,`date_end`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // สินค้าในแต่ละ Flash Sale
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_flash_sale_product` (
+                `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_flash_sale` INT UNSIGNED NOT NULL,
+                `id_product`    INT UNSIGNED NOT NULL,
+                `price_special` DECIMAL(20,6) NOT NULL DEFAULT 0.000000,
+                `qty_limit`     INT UNSIGNED DEFAULT NULL,
+                `qty_sold`      INT UNSIGNED NOT NULL DEFAULT 0,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_sale_product` (`id_flash_sale`,`id_product`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // snapshot สต็อกแต่ละ channel
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_stock_channel` (
+                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_product` INT UNSIGNED NOT NULL,
+                `channel`    ENUM('prestashop','shopee','lazada','tiktok','erp') NOT NULL,
+                `qty`        INT NOT NULL DEFAULT 0,
+                `date_sync`  DATETIME DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_product_channel_stock` (`id_product`,`channel`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // audit log การ sync
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_sync_log` (
+                `id_log`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `channel`  VARCHAR(32) NOT NULL,
+                `action`   VARCHAR(64) NOT NULL,
+                `status`   ENUM('success','error','partial') NOT NULL,
+                `records`  INT NOT NULL DEFAULT 0,
+                `message`  TEXT DEFAULT NULL,
+                `date_add` DATETIME NOT NULL,
+                PRIMARY KEY (`id_log`),
+                KEY `idx_channel_date` (`channel`,`date_add`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // mapping PS order ↔ marketplace order
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_order_channel` (
+                `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_order`         INT UNSIGNED NOT NULL,
+                `channel`          ENUM('shopee','lazada','tiktok') NOT NULL,
+                `channel_order_id` VARCHAR(128) NOT NULL,
+                `channel_status`   VARCHAR(64) DEFAULT NULL,
+                `date_add`         DATETIME NOT NULL,
+                `date_upd`         DATETIME NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_order_channel` (`id_order`,`channel`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            // cache ข้อมูลสินค้าจาก ERP
+            "CREATE TABLE IF NOT EXISTS `{$p}mec_erp_product` (
+                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_product` INT UNSIGNED NOT NULL,
+                `erp_sku`    VARCHAR(64) NOT NULL,
+                `cost_price` DECIMAL(20,6) NOT NULL DEFAULT 0.000000,
+                `erp_stock`  INT NOT NULL DEFAULT 0,
+                `erp_data`   TEXT DEFAULT NULL,
+                `date_sync`  DATETIME DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `ux_product` (`id_product`),
+                UNIQUE KEY `ux_erp_sku` (`erp_sku`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ];
+
+        foreach ($tables as $sql) {
+            if (!$db->execute($sql)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function uninstallTables(): void
+    {
+        $db = Db::getInstance();
+        $p  = _DB_PREFIX_;
+
+        foreach ([
+            'mec_erp_product',
+            'mec_order_channel',
+            'mec_sync_log',
+            'mec_stock_channel',
+            'mec_flash_sale_product',
+            'mec_flash_sale',
+            'mec_price_tier',
+            'mec_product_channel',
+            'myerpconnect_verification',
+        ] as $table) {
+            $db->execute("DROP TABLE IF EXISTS `{$p}{$table}`");
+        }
     }
 
     private function createCustomerGroups(): bool
@@ -488,29 +632,17 @@ class MyErpConnect extends Module
         ]);
     }
 
-    private function buildErpClient(): ErpApiClient
+    private function buildErpClient(): IErpConnector
     {
-        return new ErpApiClient(
-            Configuration::get('MYERPCONNECT_API_URL'),
-            Configuration::get('MYERPCONNECT_API_KEY')
-        );
+        return ConnectorFactory::erp();
     }
 
     private function buildSyncer(): MultiChannelSyncer
     {
         return new MultiChannelSyncer(
-            $this->buildErpClient(),
-            new ShopeeApiClient(
-                (int)Configuration::get('MYERPCONNECT_SHOPEE_PARTNER_ID'),
-                Configuration::get('MYERPCONNECT_SHOPEE_PARTNER_KEY'),
-                (int)Configuration::get('MYERPCONNECT_SHOPEE_SHOP_ID'),
-                Configuration::get('MYERPCONNECT_SHOPEE_ACCESS_TOKEN')
-            ),
-            new LazadaApiClient(
-                Configuration::get('MYERPCONNECT_LAZADA_APP_KEY'),
-                Configuration::get('MYERPCONNECT_LAZADA_APP_SECRET'),
-                Configuration::get('MYERPCONNECT_LAZADA_ACCESS_TOKEN')
-            ),
+            ConnectorFactory::erp(),
+            ConnectorFactory::shopee(),
+            ConnectorFactory::lazada(),
             (float)(Configuration::get('MYERPCONNECT_RETAIL_FACTOR')    ?: 1.20),
             (float)(Configuration::get('MYERPCONNECT_WHOLESALE_FACTOR') ?: 1.05)
         );

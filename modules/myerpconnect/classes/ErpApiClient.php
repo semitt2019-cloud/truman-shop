@@ -3,7 +3,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-class ErpApiClient
+class ErpApiClient implements IErpConnector
 {
     private $api_url;
     private $api_key;
@@ -38,6 +38,12 @@ class ErpApiClient
             'items'    => $items,
         ]);
         return true;
+    }
+
+    public function isAvailable(): bool
+    {
+        return !empty(Configuration::get('MYERPCONNECT_API_URL'))
+            && !empty(Configuration::get('MYERPCONNECT_API_KEY'));
     }
 
     // ---------------------------------------------------------------
