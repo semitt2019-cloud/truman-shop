@@ -1,0 +1,39 @@
+/* 2M RACING - Custom Theme */
+:root {
+  --primary: #C0272D;
+}
+
+/* Primary color overrides */
+a:hover,
+#header .top-menu a[data-depth="0"]:hover { color: #C0272D; }
+
+.btn-primary, .btn-primary:hover { background-color: #C0272D; border-color: #C0272D; }
+.btn-primary:focus, .btn-primary.active { background-color: #9a1e22; }
+
+#header { background: #1a1a1a; }
+#header a, #header .header-nav .blockcart a { color: #fff; }
+#header a:hover { color: #C0272D; }
+#header .header-nav { border-bottom: 2px solid #C0272D; }
+#header .header-top a[data-depth="0"] { color: #fff; }
+
+.page-item.active .page-link { background-color: #C0272D; border-color: #C0272D; }
+.page-link { color: #C0272D; }
+
+.product-price, #blockcart-modal .product-name { color: #C0272D; }
+
+.product-flags li.product-flag { background: #C0272D; }
+
+.tabs .nav-tabs .nav-link.active,
+.tabs .nav-tabs .nav-link:hover { border-bottom-color: #C0272D; color: #C0272D; }
+
+#header .header-nav .cart-preview.active { background: #C0272D; }
+
+.brands-sort .select-list:hover,
+.products-sort-order .select-list:hover { background: #C0272D; }
+
+body { background: #f5f5f5; }
+
+.footer-container { background: #1a1a1a; color: #aaa; }
+.footer-container li a { color: #aaa; }
+.footer-container li a:hover { color: #C0272D; }
+.block-contact, .footer-container .h3, .footer-container .h4 { color: #fff; }

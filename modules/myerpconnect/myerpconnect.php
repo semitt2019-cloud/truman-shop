@@ -17,7 +17,7 @@ require_once __DIR__ . '/classes/ShopeeApiClient.php';
 require_once __DIR__ . '/classes/LazadaApiClient.php';
 require_once __DIR__ . '/classes/MultiChannelSyncer.php';
 
-// Factory (load last — needs all classes above)
+// Factory (load last - needs all classes above)
 require_once __DIR__ . '/classes/connectors/ConnectorFactory.php';
 
 class MyErpConnect extends Module
@@ -62,7 +62,7 @@ class MyErpConnect extends Module
         $this->version = '1.2.0';
         $this->author  = '2M RACING Dev';
         $this->need_instance = 0;
-        $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => _PS_VERSION_];
+        $this->ps_versions_compliancy = ['min' => '7.4.0', 'max' => _PS_VERSION_];
         $this->bootstrap = true;
 
         parent::__construct();
@@ -102,13 +102,11 @@ class MyErpConnect extends Module
     // ---------------------------------------------------------------
     // DB
     // ---------------------------------------------------------------
-    private function installTables(): bool
+    private function installTables()
     {
         $db = Db::getInstance();
         $p  = _DB_PREFIX_;
-
         $tables = [
-            // ยืนยันตัวตนลูกค้า
             "CREATE TABLE IF NOT EXISTS `{$p}myerpconnect_verification` (
                 `id_verification` INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_customer`     INT UNSIGNED NOT NULL,
@@ -123,8 +121,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id_verification`),
                 UNIQUE KEY `ux_customer` (`id_customer`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // mapping สินค้า PS ↔ Shopee / Lazada / TikTok / ERP
             "CREATE TABLE IF NOT EXISTS `{$p}mec_product_channel` (
                 `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_product`      INT UNSIGNED NOT NULL,
@@ -136,8 +132,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `ux_product_channel` (`id_product`,`channel`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // ราคาต่อสินค้าต่อ customer group (override PS specific-price)
             "CREATE TABLE IF NOT EXISTS `{$p}mec_price_tier` (
                 `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_product` INT UNSIGNED NOT NULL,
@@ -147,8 +141,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `ux_product_group` (`id_product`,`id_group`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // Flash Sale campaigns
             "CREATE TABLE IF NOT EXISTS `{$p}mec_flash_sale` (
                 `id_flash_sale` INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `name`          VARCHAR(128) NOT NULL,
@@ -159,8 +151,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id_flash_sale`),
                 KEY `idx_active_end` (`active`,`date_end`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // สินค้าในแต่ละ Flash Sale
             "CREATE TABLE IF NOT EXISTS `{$p}mec_flash_sale_product` (
                 `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_flash_sale` INT UNSIGNED NOT NULL,
@@ -171,8 +161,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `ux_sale_product` (`id_flash_sale`,`id_product`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // snapshot สต็อกแต่ละ channel
             "CREATE TABLE IF NOT EXISTS `{$p}mec_stock_channel` (
                 `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_product` INT UNSIGNED NOT NULL,
@@ -182,8 +170,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `ux_product_channel_stock` (`id_product`,`channel`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // audit log การ sync
             "CREATE TABLE IF NOT EXISTS `{$p}mec_sync_log` (
                 `id_log`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `channel`  VARCHAR(32) NOT NULL,
@@ -195,8 +181,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id_log`),
                 KEY `idx_channel_date` (`channel`,`date_add`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // mapping PS order ↔ marketplace order
             "CREATE TABLE IF NOT EXISTS `{$p}mec_order_channel` (
                 `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_order`         INT UNSIGNED NOT NULL,
@@ -208,8 +192,6 @@ class MyErpConnect extends Module
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `ux_order_channel` (`id_order`,`channel`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-
-            // cache ข้อมูลสินค้าจาก ERP
             "CREATE TABLE IF NOT EXISTS `{$p}mec_erp_product` (
                 `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `id_product` INT UNSIGNED NOT NULL,
@@ -223,21 +205,18 @@ class MyErpConnect extends Module
                 UNIQUE KEY `ux_erp_sku` (`erp_sku`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ];
-
         foreach ($tables as $sql) {
             if (!$db->execute($sql)) {
                 return false;
             }
         }
-
         return true;
     }
 
-    private function uninstallTables(): void
+    private function uninstallTables()
     {
         $db = Db::getInstance();
         $p  = _DB_PREFIX_;
-
         foreach ([
             'mec_erp_product',
             'mec_order_channel',
@@ -253,15 +232,14 @@ class MyErpConnect extends Module
         }
     }
 
-    private function createCustomerGroups(): bool
+    private function createCustomerGroups()
     {
-        $langs   = Language::getLanguages(false);
-        $groups  = [
-            'MYERPCONNECT_GROUP_RETAIL'   => ['th' => 'ลูกค้าทั่วไป (ปลีก)',      'en' => 'Retail Customer'],
-            'MYERPCONNECT_GROUP_MECHANIC' => ['th' => 'ช่างซ่อม',                   'en' => 'Mechanic'],
-            'MYERPCONNECT_GROUP_DEALER'   => ['th' => 'ร้านขายอะไหล่ (ส่ง)',       'en' => 'Parts Dealer'],
+        $langs  = Language::getLanguages(false);
+        $groups = [
+            'MYERPCONNECT_GROUP_RETAIL'   => ['th' => 'ลูกค้าทั่วไป (ปลีก)', 'en' => 'Retail Customer'],
+            'MYERPCONNECT_GROUP_MECHANIC' => ['th' => 'ช่างซ่อม',              'en' => 'Mechanic'],
+            'MYERPCONNECT_GROUP_DEALER'   => ['th' => 'ร้านขายอะไหล่ (ส่ง)', 'en' => 'Parts Dealer'],
         ];
-
         foreach ($groups as $cfg_key => $names) {
             if ((int)Configuration::get($cfg_key) > 0) {
                 continue;
@@ -272,17 +250,16 @@ class MyErpConnect extends Module
             $group->show_prices = 1;
             foreach ($langs as $lang) {
                 $iso = $lang['iso_code'];
-                $group->name[(int)$lang['id_lang']] = $names[$iso] ?? $names['en'];
+                $group->name[(int)$lang['id_lang']] = isset($names[$iso]) ? $names[$iso] : $names['en'];
             }
             if ($group->add()) {
                 Configuration::updateValue($cfg_key, (int)$group->id);
             }
         }
-
         return true;
     }
 
-    private function addColumns(): bool
+    private function addColumns()
     {
         Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'product`
             ADD COLUMN IF NOT EXISTS `shopee_item_id` INT(11) NULL DEFAULT NULL,
@@ -290,16 +267,15 @@ class MyErpConnect extends Module
         return true;
     }
 
-    private function removeColumns(): void {}
+    private function removeColumns() {}
 
-    private function createUploadDir(): bool
+    private function createUploadDir()
     {
         $dir = self::getVerificationUploadDir();
         return is_dir($dir);
     }
 
-    // Static — ใช้ได้จาก front/admin controller
-    public static function getVerificationUploadDir(): string
+    public static function getVerificationUploadDir()
     {
         $dir = _PS_MODULE_DIR_ . 'myerpconnect/uploads/verification/';
         if (!is_dir($dir)) {
@@ -315,17 +291,15 @@ class MyErpConnect extends Module
     // ---------------------------------------------------------------
     // Back Office config
     // ---------------------------------------------------------------
-    public function getContent(): string
+    public function getContent()
     {
         $output = '';
-
         if (Tools::isSubmit('submit_myerpconnect')) {
             foreach (self::CFG_KEYS as $key) {
                 Configuration::updateValue($key, Tools::getValue($key));
             }
             $output .= $this->displayConfirmation($this->l('บันทึกการตั้งค่าเรียบร้อยแล้ว'));
         }
-
         if (Tools::isSubmit('sync_now')) {
             try {
                 $stats = $this->buildSyncer()->runFullSync();
@@ -338,11 +312,10 @@ class MyErpConnect extends Module
                 $output .= $this->displayError($e->getMessage());
             }
         }
-
         return $output . $this->renderForm();
     }
 
-    private function renderForm(): string
+    private function renderForm()
     {
         $grp_info = '<div class="alert alert-info"><strong>กลุ่มลูกค้าที่สร้างแล้ว:</strong><br>'
             . 'ลูกค้าทั่วไป (Group ID: ' . (int)Configuration::get('MYERPCONNECT_GROUP_RETAIL') . ')<br>'
@@ -353,23 +326,23 @@ class MyErpConnect extends Module
         $fields_form = ['form' => [
             'legend' => ['title' => $this->l('ตั้งค่าการเชื่อมต่อ'), 'icon' => 'icon-cogs'],
             'input'  => [
-                ['type' => 'html', 'html_content' => '<h4>ERP API</h4>',           'name' => ''],
-                ['type' => 'text', 'label' => 'ERP API URL',            'name' => 'MYERPCONNECT_API_URL',           'required' => true],
-                ['type' => 'text', 'label' => 'ERP API Key',            'name' => 'MYERPCONNECT_API_KEY',           'required' => true],
-                ['type' => 'text', 'label' => 'Retail Price Factor',    'name' => 'MYERPCONNECT_RETAIL_FACTOR',     'desc' => 'เช่น 1.20 = บวก 20%'],
-                ['type' => 'text', 'label' => 'Wholesale Price Factor', 'name' => 'MYERPCONNECT_WHOLESALE_FACTOR',  'desc' => 'เช่น 1.05 = บวก 5%'],
-                ['type' => 'html', 'html_content' => '<h4>Shopee</h4>',            'name' => ''],
+                ['type' => 'html', 'html_content' => '<h4>ERP API</h4>', 'name' => ''],
+                ['type' => 'text', 'label' => 'ERP API URL',            'name' => 'MYERPCONNECT_API_URL',          'required' => true],
+                ['type' => 'text', 'label' => 'ERP API Key',            'name' => 'MYERPCONNECT_API_KEY',          'required' => true],
+                ['type' => 'text', 'label' => 'Retail Price Factor',    'name' => 'MYERPCONNECT_RETAIL_FACTOR',    'desc' => 'เช่น 1.20 = บวก 20%'],
+                ['type' => 'text', 'label' => 'Wholesale Price Factor', 'name' => 'MYERPCONNECT_WHOLESALE_FACTOR', 'desc' => 'เช่น 1.05 = บวก 5%'],
+                ['type' => 'html', 'html_content' => '<h4>Shopee</h4>', 'name' => ''],
                 ['type' => 'text', 'label' => 'Partner ID',   'name' => 'MYERPCONNECT_SHOPEE_PARTNER_ID'],
                 ['type' => 'text', 'label' => 'Partner Key',  'name' => 'MYERPCONNECT_SHOPEE_PARTNER_KEY'],
                 ['type' => 'text', 'label' => 'Shop ID',      'name' => 'MYERPCONNECT_SHOPEE_SHOP_ID'],
                 ['type' => 'text', 'label' => 'Access Token', 'name' => 'MYERPCONNECT_SHOPEE_ACCESS_TOKEN'],
-                ['type' => 'html', 'html_content' => '<h4>Lazada</h4>',            'name' => ''],
+                ['type' => 'html', 'html_content' => '<h4>Lazada</h4>', 'name' => ''],
                 ['type' => 'text', 'label' => 'App Key',      'name' => 'MYERPCONNECT_LAZADA_APP_KEY'],
                 ['type' => 'text', 'label' => 'App Secret',   'name' => 'MYERPCONNECT_LAZADA_APP_SECRET'],
                 ['type' => 'text', 'label' => 'Access Token', 'name' => 'MYERPCONNECT_LAZADA_ACCESS_TOKEN'],
-                ['type' => 'html', 'html_content' => '<h4>Flash Sale</h4>',        'name' => ''],
-                ['type' => 'text', 'label' => 'Flash Sale End (Unix Timestamp)', 'name' => 'MYERPCONNECT_FLASH_SALE_END', 'desc' => 'Unix timestamp สิ้นสุด Flash Sale — ว่าง/0 = ปิด'],
-                ['type' => 'html', 'html_content' => '<h4>ระบบสมาชิก</h4>',      'name' => ''],
+                ['type' => 'html', 'html_content' => '<h4>Flash Sale</h4>', 'name' => ''],
+                ['type' => 'text', 'label' => 'Flash Sale End (Unix Timestamp)', 'name' => 'MYERPCONNECT_FLASH_SALE_END', 'desc' => 'Unix timestamp สิ้นสุด Flash Sale'],
+                ['type' => 'html', 'html_content' => '<h4>ระบบสมาชิก</h4>', 'name' => ''],
                 ['type' => 'text', 'label' => 'อีเมลแจ้งเตือน Admin', 'name' => 'MYERPCONNECT_ADMIN_EMAIL', 'desc' => 'รับแจ้งเมื่อลูกค้าส่งเอกสารยืนยันตัวตน'],
                 ['type' => 'html', 'html_content' => $grp_info, 'name' => ''],
             ],
@@ -390,24 +363,22 @@ class MyErpConnect extends Module
         $helper->currentIndex     = AdminController::$currentIndex . '&configure=' . $this->name;
         $helper->submit_action    = 'submit_myerpconnect';
         $helper->default_form_language = (int)Configuration::get('PS_LANG_DEFAULT');
-
         foreach (self::CFG_KEYS as $key) {
             $helper->fields_value[$key] = Configuration::get($key);
         }
-
         return $helper->generateForm([$fields_form]);
     }
 
     // ---------------------------------------------------------------
-    // Hooks — Frontend display
+    // Hooks
     // ---------------------------------------------------------------
-    public function hookDisplayHeader(): void
+    public function hookDisplayHeader()
     {
         $this->context->controller->addCSS($this->_path . 'views/css/shopee-style.css');
         $this->context->controller->addJS($this->_path . 'views/js/product-grid.js');
     }
 
-    public function hookDisplayProductListHeader(array $params): string
+    public function hookDisplayProductListHeader(array $params)
     {
         $categories = Category::getSimpleCategories($this->context->language->id);
         foreach ($categories as &$cat) {
@@ -425,11 +396,11 @@ class MyErpConnect extends Module
         $flash_end_ts = (int)Configuration::get('MYERPCONNECT_FLASH_SALE_END');
         $flash_active = $flash_end_ts > time();
 
-        $current_cat_id = (int)Tools::getValue('id_category', 0);
+        $current_cat_id   = (int)Tools::getValue('id_category', 0);
         $current_cat_name = '';
         if ($current_cat_id > 0) {
             $cat_obj = new Category($current_cat_id, $this->context->language->id);
-            $current_cat_name = $cat_obj->name ?? '';
+            $current_cat_name = isset($cat_obj->name) ? $cat_obj->name : '';
         }
 
         $this->context->smarty->assign([
@@ -444,20 +415,17 @@ class MyErpConnect extends Module
                 ? $this->context->link->getCategoryLink($current_cat_id ?: 2)
                 : null,
         ]);
-
         return $this->fetch('module:myerpconnect/views/templates/hook/product-listing-page.tpl');
     }
 
-    public function hookDisplayProductMiniatureCustom(array $params): string
+    public function hookDisplayProductMiniatureCustom(array $params)
     {
-        $product = $params['product'] ?? [];
+        $product = isset($params['product']) ? $params['product'] : [];
         if (empty($product)) {
             return '';
         }
-
-        $id_product = (int)($product['id_product'] ?? 0);
+        $id_product = (int)(isset($product['id_product']) ? $product['id_product'] : 0);
         $ws_factor  = (float)(Configuration::get('MYERPCONNECT_WHOLESALE_FACTOR') ?: 1.05);
-
         if ($id_product > 0) {
             $ws_raw = Db::getInstance()->getValue(
                 'SELECT `wholesale_price` FROM `' . _DB_PREFIX_ . 'product` WHERE `id_product` = ' . $id_product
@@ -466,7 +434,6 @@ class MyErpConnect extends Module
                 ? Tools::displayPrice((float)$ws_raw * $ws_factor, $this->context->currency)
                 : null;
             $product['is_wholesale'] = ($ws_raw > 0);
-
             $product['sold_count'] = (int)Db::getInstance()->getValue(
                 'SELECT SUM(od.`product_quantity`)
                  FROM `' . _DB_PREFIX_ . 'order_detail` od
@@ -474,38 +441,28 @@ class MyErpConnect extends Module
                  WHERE od.`product_id` = ' . $id_product . ' AND o.`valid` = 1'
             );
         }
-
         $this->context->smarty->assign(['product' => $product]);
         return $this->fetch('module:myerpconnect/views/templates/front/product-miniature.tpl');
     }
 
-    // ---------------------------------------------------------------
-    // Hook: Type selector ในฟอร์มสมัครสมาชิก
-    // ---------------------------------------------------------------
-    public function hookDisplayCustomerAccountForm(): string
+    public function hookDisplayCustomerAccountForm()
     {
         return $this->fetch('module:myerpconnect/views/templates/hook/customer-type-selector.tpl');
     }
 
-    // ---------------------------------------------------------------
-    // Hook: บันทึก type หลังสมัครสมาชิกสำเร็จ
-    // ---------------------------------------------------------------
-    public function hookActionCustomerAccountAdd(array $params): void
+    public function hookActionCustomerAccountAdd(array $params)
     {
-        $customer = $params['newCustomer'] ?? null;
+        $customer = isset($params['newCustomer']) ? $params['newCustomer'] : null;
         if (!($customer instanceof Customer)) {
             return;
         }
-
         $type = Tools::getValue('customer_type', self::TYPE_RETAIL);
         if (!in_array($type, [self::TYPE_RETAIL, self::TYPE_MECHANIC, self::TYPE_DEALER], true)) {
             $type = self::TYPE_RETAIL;
         }
-
         $id_customer = (int)$customer->id;
         $status      = ($type === self::TYPE_RETAIL) ? 'approved' : 'pending';
         $now         = date('Y-m-d H:i:s');
-
         Db::getInstance()->insert('myerpconnect_verification', [
             'id_customer'   => $id_customer,
             'customer_type' => pSQL($type),
@@ -513,34 +470,26 @@ class MyErpConnect extends Module
             'date_add'      => $now,
             'date_upd'      => $now,
         ], false, true, Db::INSERT_IGNORE);
-
-        $this->applyCustomerGroup($id_customer, $type, $status);
-
+        self::applyCustomerGroup($id_customer, $type, $status);
         if ($type !== self::TYPE_RETAIL) {
             $this->context->cookie->mec_pending_docs = 1;
         }
     }
 
-    // ---------------------------------------------------------------
-    // Hook: สถานะในหน้า My Account
-    // ---------------------------------------------------------------
-    public function hookDisplayCustomerAccount(): string
+    public function hookDisplayCustomerAccount()
     {
         if (!$this->context->customer->isLogged()) {
             return '';
         }
-
         $id_customer = (int)$this->context->customer->id;
         $verification = Db::getInstance()->getRow(
             'SELECT * FROM `' . _DB_PREFIX_ . 'myerpconnect_verification`
              WHERE `id_customer` = ' . $id_customer
         );
-
         $show_banner = !empty($this->context->cookie->mec_pending_docs);
         if ($show_banner) {
             unset($this->context->cookie->mec_pending_docs);
         }
-
         $this->context->smarty->assign([
             'mec_verification'  => $verification,
             'mec_show_banner'   => $show_banner,
@@ -556,24 +505,18 @@ class MyErpConnect extends Module
                 'rejected' => 'ปฏิเสธ',
             ],
         ]);
-
         return $this->fetch('module:myerpconnect/views/templates/hook/customer-account-verification.tpl');
     }
 
-    // ---------------------------------------------------------------
-    // Hook: ตัดสต็อก ERP เมื่อชำระเงิน
-    // ---------------------------------------------------------------
-    public function hookActionOrderStatusUpdate(array $params): void
+    public function hookActionOrderStatusUpdate(array $params)
     {
         $id_order   = (int)$params['id_order'];
         $new_status = $params['newOrderStatus'];
-
         if ((int)$new_status->id !== (int)Configuration::get('PS_OS_PAYMENT')) {
             return;
         }
-
         try {
-            $order        = new Order($id_order);
+            $order         = new Order($id_order);
             $order_details = $order->getOrderDetailList();
             $items = [];
             foreach ($order_details as $detail) {
@@ -584,7 +527,7 @@ class MyErpConnect extends Module
             }
             $this->buildErpClient()->deductStock($id_order, $items);
             PrestaShopLogger::addLog(
-                '[MyErpConnect] Stock deducted Order #' . $id_order . ' — ' . count($items) . ' SKUs',
+                '[MyErpConnect] Stock deducted Order #' . $id_order . ' - ' . count($items) . ' SKUs',
                 1, null, 'MyErpConnect', $id_order, true
             );
         } catch (Exception $e) {
@@ -598,7 +541,7 @@ class MyErpConnect extends Module
     // ---------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------
-    public static function applyCustomerGroup(int $id_customer, string $type, string $status): void
+    public static function applyCustomerGroup($id_customer, $type, $status)
     {
         $group_retail   = (int)Configuration::get('MYERPCONNECT_GROUP_RETAIL');
         $group_mechanic = (int)Configuration::get('MYERPCONNECT_GROUP_MECHANIC');
@@ -606,11 +549,13 @@ class MyErpConnect extends Module
         $default_group  = (int)Configuration::get('PS_CUSTOMER_GROUP');
 
         if ($status === 'approved') {
-            $group_id = match ($type) {
-                self::TYPE_MECHANIC => $group_mechanic ?: $default_group,
-                self::TYPE_DEALER   => $group_dealer   ?: $default_group,
-                default             => $group_retail   ?: $default_group,
-            };
+            if ($type === self::TYPE_MECHANIC) {
+                $group_id = $group_mechanic ?: $default_group;
+            } elseif ($type === self::TYPE_DEALER) {
+                $group_id = $group_dealer ?: $default_group;
+            } else {
+                $group_id = $group_retail ?: $default_group;
+            }
         } else {
             $group_id = $group_retail ?: $default_group;
         }
@@ -632,12 +577,12 @@ class MyErpConnect extends Module
         ]);
     }
 
-    private function buildErpClient(): IErpConnector
+    private function buildErpClient()
     {
         return ConnectorFactory::erp();
     }
 
-    private function buildSyncer(): MultiChannelSyncer
+    private function buildSyncer()
     {
         return new MultiChannelSyncer(
             ConnectorFactory::erp(),
